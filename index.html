@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/ec135c73c5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuex"></script>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h2 {
+            margin: 10px 0;
+        }
+
+        .navigation-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 5px solid rgb(253, 110, 47);
+            box-shadow: 0 3px 10px #aaaaaa;
+            font-size: 20px;
+        }
+
+        .navigation-bar span {
+            flex-basis: 33%;
+            text-align: center;
+        }
+
+        .navigation-bar :first-child {
+            color: rgb(253, 110, 47);
+        }
+
+        .navigation-bar :nth-child(2) {
+            font-weight: bold;
+        }
+
+        .navigation-bar .back-button {
+            display: flex;
+            align-items: center;
+        }
+
+        .filled {
+            color: rgb(253, 110, 47);
+        }
+
+        .navigation-bar .back-button :first-child {
+            margin-right: 5px;
+        }
+        
+        .list-view-element {
+            border-bottom: 1px solid #EEEEEE;
+            padding: 10px;
+        }
+
+        .list-view-element p {
+            margin: 0;
+        }
+
+        .list-view-element i {
+            margin: 0 5px;
+        }
+
+        input[type='text'] {
+            box-sizing: border-box;
+            border: 1px solid #cccccc;
+            padding: 0.5em;
+            border-radius: 5px;
+            line-height: 1;
+            font-size: 16px;
+            height: 2.5em;
+            width: 100%;
+            font-size: 1em;
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input:focus {
+            border: 1px solid rgb(253, 110, 47);
+        }
+
+        button {
+            font-size: 16px;
+            padding: 5px 10px;
+            border: 1px solid rgb(253, 110, 47);
+            background: white;
+            border-radius: 5px;
+            color: rgb(253, 110, 47);
+            margin-top: 10px;
+        }
+
+        button.active {
+            background: rgb(253, 110, 47);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    
+    <script type="module">
+
+        Vue.use(Vuex)
+
+        export const store = new Vuex.Store({
+            state: {
+                user: {
+                    name: "Thomas Barrett",
+                    rides: [],
+                },
+                rides: [{
+                    from: "Caltech",
+                    to: "Los Angeles International Airport",
+                    date: "November 22nd",
+                    time: "7:30 AM",
+                    driver: "Luke Juusola",
+                    message: "Plz venmo me $5 for gas :)",
+                    capacity: 3,
+                    members: ["Jamie Littman", "Riley O'Neil"]
+                }, {
+                    from: "Caltech",
+                    to: "Los Angeles International Airport",
+                    date: "November 23rd",
+                    time: "3:00 PM",
+                    driver: "Alex Bardon",
+                    message: "Anyone is welcome. I hope y'all don't mind country music because that's all I'm playing.",
+                    capacity: 5,
+                    members: ["Alex Wuschner", "Thomas Barrett"],
+                }, {
+                    from: "Los Angeles International Airport",
+                    to: "Caltech",
+                    date: "November 28th",
+                    time: "2:15 PM",
+                    driver: "Alex Bardon",
+                    message: "",
+                    capacity: 5,
+                    members: [],
+                }, {
+                    from: "Caltech",
+                    to: "Los Angeles International Airport",
+                    date: "November 28th",
+                    time: "5:00 PM",
+                    driver: "Luke Juusola",
+                    message: "",
+                    capacity: 3,
+                    members: ["Jamie Littman"],
+                }],
+            },
+            currentRide: null,
+            mutations: {
+                selectRide(state, ride) {
+                    Vue.set(state, 'currentRide', ride);
+                },
+                addRider(state, data) {
+                    state.user.rides.push(data.ride);
+                    data.ride.members.push(data.user);
+                },
+                removeRider(state, data) {
+                    state.user.rides = state.user.rides.filter(ride => ride !== data.ride);
+                    data.ride.members = data.ride.members.filter(user => user !== data.user);
+                },
+            },
+            getters: {
+                rides: state => state.rides,
+                user: state => state.user,
+                currentRide: state => state.currentRide,
+            }
+        })
+        
+        const MainPage = Vue.extend({
+            methods: {
+                changed: function(flavor) {
+                    this.$store.commit('change', flavor)
+                }
+            },
+            template: `<div>
+                <h1>Flavor: {{ $store.getters.flavor }}</h1>
+                <ul>
+                    <li @click="changed(flavor)" v-for="flavor in $store.getters.flavors">{{ flavor }}</li>
+                </ul>
+            </div>`
+        });
+
+        const Page1 = Vue.extend({
+            methods: {
+                push: function(ride) {
+                    this.$store.commit('selectRide', ride)
+                    this.$emit('push', {component: 'Page2', title: "Details"});
+                }
+            },
+            template: `
+            <div>
+                <div class='list-view-element'>
+                    <input type='text' placeholder='Search'/>
+                </div>
+                <div class='list-view'>
+                    <div @click='push(ride)' class='list-view-element' v-for="ride in $store.getters.rides">
+                        <p><span style='color: #888888'>From: </span>{{ride.from}}</p>
+                        <p><span style='color: #888888'>To: </span>{{ride.to}}</p>
+                        <p>{{ride.date}}</p>
+                        <p>{{ride.time}}</p>
+                    </div>
+                </div>
+            </div>
+            `
+        });
+
+        const Page2 = Vue.extend({
+            methods: {
+                joinRide: function() {
+                    this.$store.commit('addRider',{ride: this.currentRide, user: this.user});
+                },
+                leaveRide: function() {
+                    this.$store.commit('removeRider',{ride: this.currentRide, user: this.user});
+                }
+            },
+            computed: {
+                currentRide: function() {
+                    return this.$store.getters.currentRide;
+                },
+                user: function() {
+                    return this.$store.getters.user.name;
+                }
+            },
+            template: `
+            <div>
+                <div class='list-view-element'>
+                    <h2><i class="fas fa-car"></i>{{currentRide.driver}}</h2>
+                    <div>
+                        <i v-for='n in currentRide.capacity' :class='{filled: n <= currentRide.members.length }' class="fas fa-user"></i>
+                    </div>
+                    <button v-if='!currentRide.members.includes(user)' @click='joinRide'>Join</button>
+                    <button v-else class='active' @click='leaveRide'>Leave</button>
+                    <button>Chat</button>
+                </div>
+                <div v-if='currentRide.message !== ""' class='list-view-element'>
+                    <p>{{currentRide.message}}</p>
+                </div>
+                <div class='list-view-element'>
+                    <h2>Riders</h2>
+                </div>
+                <div v-for='member in currentRide.members' class='list-view-element'>
+                    <p>{{member}}</p>
+                </div>
+            </div>
+            `
+        });
+
+        const Page3 = Vue.extend({
+            methods: {
+                find: function() {
+                    this.$emit('push', {component: 'Page1', title: "Rides"});
+                },
+                push: function(ride) {
+                    this.$store.commit('selectRide', ride)
+                    this.$emit('push', {component: 'Page2', title: "Details"});
+                }
+            },
+            computed: {
+                user: function() {
+                    return this.$store.getters.user;
+                }
+            },
+            template: `
+            <div>
+                <div class='list-view-element'>
+                    <button @click='find'>Find a Ride</button>
+                </div>
+                <div v-if='user.rides.length > 0'>
+                    <div @click='push(ride)' class='list-view-element' v-for="ride in user.rides">
+                        <p><span style='color: #888888'>From: </span>{{ride.from}}</p>
+                        <p><span style='color: #888888'>To: </span>{{ride.to}}</p>
+                        <p>{{ride.date}}</p>
+                        <p>{{ride.time}}</p>
+                    </div>
+                </div>
+                <div v-else class='list-view-element'>
+                    You have no upcoming rides
+                </div>
+            </div>
+            `
+        });
+
+        const NavigationContainer = Vue.extend({
+            data: function() {
+                return {
+                    stack: [{
+                        component: 'Page3',
+                        title: 'Upcoming',
+                    }],
+                }
+            },
+            components: {
+                Page1,
+                Page2,
+                Page3
+            },
+            computed: {
+                currentPage: function() {
+                    return this.stack[this.stack.length - 1]
+                }
+            },
+            template: `
+            <div class='navigation-controller'>
+                <div class='navigation-bar'>
+                    <span>
+                        <span class='back-button' @click='stack.pop()' v-if='stack.length > 1'>
+                            <i class="fas fa-chevron-left"></i>Back
+                        </span>
+                    </span>
+                    <span>{{ currentPage.title }}</span>
+                    <span></span>
+                </div>
+                <component v-bind:is="currentPage.component" @push="(event) => stack.push(event)"></component>
+            </div>
+            `
+        });
+
+        var app = new Vue({
+            el: '#app',
+            store,
+            components: {
+                MainPage,
+                NavigationContainer
+            },
+            template: `
+            <NavigationContainer></NavigationContainer>
+            `
+        });
+    </script>
+</body>
+</html>
