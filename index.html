@@ -77,7 +77,7 @@
             margin: 0 5px;
         }
 
-        input[type='text'] {
+        input {
             box-sizing: border-box;
             border: 1px solid #cccccc;
             padding: 0.5em;
@@ -91,6 +91,7 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
+            margin-bottom: 5px;
         }
 
         input:focus {
@@ -110,6 +111,10 @@
         button.active {
             background: rgb(253, 110, 47);
             color: white;
+        }
+
+        form {
+            padding: 10px;
         }
     </style>
 </head>
@@ -188,6 +193,10 @@
                 selectRide(state, ride) {
                     Vue.set(state, 'currentRide', ride);
                 },
+                createRide(state, ride) {
+                    state.rides.push(ride);
+                    console.log(ride);
+                },
                 addRider(state, data) {
                     state.user.rides.push(data.ride);
                     data.ride.members.push(data.user);
@@ -228,6 +237,63 @@
             `
         });
 
+        const CreateRideView = Vue.extend({
+            data: function () {
+                return {
+                    from: '',
+                    to: '',
+                    date: '',
+                    time: '',
+                    capacity: 0,
+                    message: '',
+                }
+            },
+            methods: {
+                create: function() {
+                    this.$store.commit('createRide',{
+                        from: this.from,
+                        to: this.to,
+                        date: this.date,
+                        time: this.time,
+                        driver: this.user.name,
+                        message: this.message,
+                        capacity: parseInt(this.capacity),
+                        members: [],
+                    });
+                    this.$emit('pop');
+                }
+            },
+            computed: {
+                user: function() {
+                    return this.$store.getters.user;
+                }
+            },
+            template: `
+            <div>
+                <form>
+                    <label>From</label>
+                    <input type='text' v-model='from'/>
+
+                    <label>To</label>
+                    <input type='text'  v-model='to'/>
+
+                    <label>Date</label>
+                    <input type='date' v-model='date'/>
+
+                    <label>Time</label>
+                    <input type='time' v-model='time'/>
+
+                    <label>Seats Available</label>
+                    <input type='number' v-model='capacity'/>
+
+                    <label>Message</label>
+                    <input type='text'  v-model='message'/>
+
+                    <button @click.prevent='create'>Create</button>
+                </form>
+            </div>
+            `
+        });
         const Page2 = Vue.extend({
             methods: {
                 joinRide: function() {
@@ -254,7 +320,7 @@
                     </div>
                     <button v-if='!currentRide.members.includes(user.name)' @click='joinRide'>Join</button>
                     <button v-else class='active' @click='leaveRide'>Leave</button>
-                    <button>Chat</button>
+                    <button v-if='currentRide.members.includes(user.name)'>Chat</button>
                 </div>
                 <div v-if='currentRide.message !== ""' class='list-view-element'>
                     <p>{{currentRide.message}}</p>
@@ -274,6 +340,9 @@
                 find: function() {
                     this.$emit('push', {component: 'Page1', title: "Rides"});
                 },
+                create: function() {
+                    this.$emit('push', {component: "CreateRideView", title: "Create Ride"})
+                },
                 push: function(ride) {
                     this.$store.commit('selectRide', ride)
                     this.$emit('push', {component: 'Page2', title: "Details"});
@@ -290,8 +359,8 @@
                     <h2>{{user.name}}</h2>
                     <p>{{user.email}}</p>
                     <div>
-                        <button @click='find'>Find a Ride</button>
-                        <button>Profile</button>
+                        <button @click='find'>Find Ride</button>
+                        <button @click='create'>Create Ride</button>
                     </div>
                 </div>
                 <div v-if='user.rides.length > 0'>
@@ -314,14 +383,15 @@
                 return {
                     stack: [{
                         component: 'Page3',
-                        title: 'Profile',
+                        title: 'Upcoming',
                     }],
                 }
             },
             components: {
                 Page1,
                 Page2,
-                Page3
+                Page3,
+                CreateRideView
             },
             computed: {
                 currentPage: function() {
@@ -339,7 +409,7 @@
                     <span>{{ currentPage.title }}</span>
                     <span></span>
                 </div>
-                <component v-bind:is="currentPage.component" @push="(event) => stack.push(event)"></component>
+                <component v-bind:is="currentPage.component" @pop='stack.pop()' @push="(event) => stack.push(event)"></component>
             </div>
             `
         });
