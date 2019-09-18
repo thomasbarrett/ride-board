@@ -124,6 +124,7 @@
             state: {
                 user: {
                     name: "Thomas Barrett",
+                    email: "tbarrett@caltech.edu",
                     rides: [],
                 },
                 rides: [{
@@ -202,20 +203,6 @@
                 currentRide: state => state.currentRide,
             }
         })
-        
-        const MainPage = Vue.extend({
-            methods: {
-                changed: function(flavor) {
-                    this.$store.commit('change', flavor)
-                }
-            },
-            template: `<div>
-                <h1>Flavor: {{ $store.getters.flavor }}</h1>
-                <ul>
-                    <li @click="changed(flavor)" v-for="flavor in $store.getters.flavors">{{ flavor }}</li>
-                </ul>
-            </div>`
-        });
 
         const Page1 = Vue.extend({
             methods: {
@@ -255,7 +242,7 @@
                     return this.$store.getters.currentRide;
                 },
                 user: function() {
-                    return this.$store.getters.user.name;
+                    return this.$store.getters.user;
                 }
             },
             template: `
@@ -265,7 +252,7 @@
                     <div>
                         <i v-for='n in currentRide.capacity' :class='{filled: n <= currentRide.members.length }' class="fas fa-user"></i>
                     </div>
-                    <button v-if='!currentRide.members.includes(user)' @click='joinRide'>Join</button>
+                    <button v-if='!currentRide.members.includes(user.name)' @click='joinRide'>Join</button>
                     <button v-else class='active' @click='leaveRide'>Leave</button>
                     <button>Chat</button>
                 </div>
@@ -300,7 +287,12 @@
             template: `
             <div>
                 <div class='list-view-element'>
-                    <button @click='find'>Find a Ride</button>
+                    <h2>{{user.name}}</h2>
+                    <p>{{user.email}}</p>
+                    <div>
+                        <button @click='find'>Find a Ride</button>
+                        <button>Profile</button>
+                    </div>
                 </div>
                 <div v-if='user.rides.length > 0'>
                     <div @click='push(ride)' class='list-view-element' v-for="ride in user.rides">
@@ -356,7 +348,6 @@
             el: '#app',
             store,
             components: {
-                MainPage,
                 NavigationContainer
             },
             template: `
